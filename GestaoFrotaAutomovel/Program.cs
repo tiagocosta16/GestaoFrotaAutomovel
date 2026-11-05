@@ -8,116 +8,98 @@ namespace GestaoFrotaAutomovel
 {
     class Program
     {
-        // Lista que permite guardar vários veículos.
+        // Lista de veículos da empresa.
         static List<Veiculo> frota = new List<Veiculo>();
 
         static void Main(string[] args)
         {
-            // Variável que controla o funcionamento do menu.
-            int opcao = 0;
+            int opcao;
 
-            // Ciclo que mantém o menu ativo até o utilizador sair.
             do
             {
                 Console.Clear();
 
-                // Apresentação do menu principal.
+                // Título do menu.
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("======================================");
-                Console.WriteLine("     SISTEMA DE GESTÃO DE FROTA");
-                Console.WriteLine("======================================");
+                Console.WriteLine("==============================================");
+                Console.WriteLine("             SISTEMA DE GESTÃO DE FROTA");
+                Console.WriteLine("==============================================");
                 Console.ResetColor();
 
-                Console.WriteLine();
-                Console.WriteLine("1 - Registar veículo");
+                Console.WriteLine("\n1 - Registar veículo");
                 Console.WriteLine("2 - Consultar veículos");
                 Console.WriteLine("3 - Abastecer veículo");
                 Console.WriteLine("4 - Realizar viagem");
                 Console.WriteLine("5 - Consultar dados de um veículo");
-                Console.WriteLine("6 - Sair");
+                Console.WriteLine("6 - Remover veículo");
+                Console.WriteLine("7 - Sair");
 
-                Console.WriteLine();
-                Console.Write("Escolha uma opção: ");
+                Console.Write("\nEscolha uma opção: ");
 
-                // Lê e valida a opção escolhida.
                 if (!int.TryParse(Console.ReadLine(), out opcao))
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("Opção inválida!");
+                    Console.ResetColor();
                     Console.ReadKey();
                     continue;
                 }
 
-                Console.WriteLine();
+                // Destaca visualmente a opção escolhida.
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("\n>> OPÇÃO SELECIONADA: " + opcao);
+                Console.ResetColor();
 
-                // Executa a funcionalidade escolhida.
                 switch (opcao)
                 {
-                    case 1:
-                        RegistarVeiculo();
-                        break;
-
-                    case 2:
-                        ConsultarVeiculos();
-                        break;
-
-                    case 3:
-                        AbastecerVeiculo();
-                        break;
-
-                    case 4:
-                        RealizarViagem();
-                        break;
-
-                    case 5:
-                        ConsultarDadosVeiculo();
-                        break;
-
-                    case 6:
-                        Console.WriteLine("A sair do sistema...");
-                        break;
-
+                    case 1: RegistarVeiculo(); break;
+                    case 2: ConsultarVeiculos(); break;
+                    case 3: AbastecerVeiculo(); break;
+                    case 4: RealizarViagem(); break;
+                    case 5: ConsultarDadosVeiculo(); break;
+                    case 6: RemoverVeiculo(); break;
+                    case 7: Console.WriteLine("A sair do sistema..."); break;
                     default:
-                        Console.WriteLine("Opção inválida! Escolha uma opção entre 1 e 6.");
+                        Console.WriteLine("Opção inválida!");
                         break;
                 }
 
-                // Aguarda que o utilizador pressione uma tecla.
-                if (opcao != 6)
+                if (opcao != 7)
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("Prima uma tecla para continuar...");
+                    Console.WriteLine("\nPrima uma tecla para continuar...");
                     Console.ReadKey();
                 }
 
-            } while (opcao != 6);
+            } while (opcao != 7);
         }
 
-        // Método para registar um novo veículo na frota.
+        // Regista um novo veículo.
         static void RegistarVeiculo()
         {
-            Console.WriteLine("=== REGISTAR VEÍCULO ===");
-
-            // Pede a matrícula do veículo.
+            Console.WriteLine("\n=== REGISTAR VEÍCULO ===");
             Console.Write("Introduza a matrícula: ");
             string matricula = Console.ReadLine();
 
-            // Verifica se a matrícula já existe.
+            if (string.IsNullOrWhiteSpace(matricula))
+            {
+                Console.WriteLine("Erro: A matrícula não pode estar vazia.");
+                return;
+            }
+
+            matricula = matricula.Trim();
+
             foreach (Veiculo v in frota)
             {
                 if (v.Matricula.Equals(matricula, StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine("Erro: Já existe um veículo com esta matrícula.");
+                    Console.WriteLine("Erro: Matrícula já registada.");
                     return;
                 }
             }
 
-            // Pede a capacidade do depósito.
-            Console.Write("Introduza a capacidade do depósito (litros): ");
+            Console.Write("Capacidade do depósito (litros): ");
 
-            int capacidade;
-
-            // Valida a capacidade introduzida.
-            if (!int.TryParse(Console.ReadLine(), out capacidade) || capacidade <= 0)
+            if (!int.TryParse(Console.ReadLine(), out int capacidade) || capacidade <= 0)
             {
                 Console.WriteLine("Erro: Capacidade inválida.");
                 return;
@@ -125,19 +107,16 @@ namespace GestaoFrotaAutomovel
 
             try
             {
-                // Cria um novo objeto da classe Veiculo.
-                Veiculo novoVeiculo = new Veiculo(matricula, capacidade);
+                Veiculo novo = new Veiculo(matricula, capacidade);
 
-                // Associa o evento de reserva ao método de alerta.
-                novoVeiculo.ReservaAtingida += MostrarAlertaReserva;
+                // Liga o evento ao método de alerta.
+                novo.ReservaAtingida += MostrarAlertaReserva;
 
-                // Adiciona o veículo à lista da frota.
-                frota.Add(novoVeiculo);
+                frota.Add(novo);
 
                 Console.WriteLine("Veículo registado com sucesso!");
-                Console.WriteLine("Matrícula: " + novoVeiculo.Matricula);
-                Console.WriteLine("Capacidade: " + novoVeiculo.CapacidadeDeposito + " litros");
-                Console.WriteLine("Depósito inicial: " + novoVeiculo.NivelCombustivel + " litros");
+                Console.WriteLine("Matrícula: " + novo.Matricula);
+                Console.WriteLine("Depósito inicial: " + novo.NivelCombustivel.ToString("F2") + " litros");
             }
             catch (ArgumentException ex)
             {
@@ -145,168 +124,169 @@ namespace GestaoFrotaAutomovel
             }
         }
 
-        // Método para apresentar todos os veículos registados.
+        // Apresenta todos os veículos numa tabela.
         static void ConsultarVeiculos()
         {
-            Console.WriteLine("=== VEÍCULOS REGISTADOS ===");
+            Console.WriteLine("\n=== VEÍCULOS REGISTADOS ===");
 
-            // Verifica se existem veículos na lista.
             if (frota.Count == 0)
             {
                 Console.WriteLine("Não existem veículos registados.");
                 return;
             }
 
-            // Percorre a lista e apresenta os veículos.
+            Console.WriteLine("---------------------------------------------------------------");
+            Console.WriteLine("| Matrícula  | Quilometragem | Combustível | Capacidade       |");
+            Console.WriteLine("---------------------------------------------------------------");
+
             foreach (Veiculo v in frota)
             {
-                Console.WriteLine("----------------------------------");
-                Console.WriteLine("Matrícula: " + v.Matricula);
-                Console.WriteLine("Quilometragem: " + v.Quilometragem + " km");
-                Console.WriteLine("Combustível: " + v.NivelCombustivel + " litros");
-                Console.WriteLine("Capacidade: " + v.CapacidadeDeposito + " litros");
+                Console.WriteLine("| {0,-10} | {1,13} | {2,11:F2} | {3,16} |",
+                    v.Matricula,
+                    v.Quilometragem,
+                    v.NivelCombustivel,
+                    v.CapacidadeDeposito);
             }
+
+            Console.WriteLine("---------------------------------------------------------------");
         }
 
-        // Método para abastecer um veículo.
+        // Abastece um veículo escolhido.
         static void AbastecerVeiculo()
         {
-            Console.WriteLine("=== ABASTECER VEÍCULO ===");
+            Console.WriteLine("\n=== ABASTECER VEÍCULO ===");
 
-            // Procura o veículo através da matrícula.
-            Veiculo veiculo = ProcurarVeiculo();
+            Veiculo v = ProcurarVeiculo();
+            if (v == null) return;
 
-            if (veiculo == null)
-            {
-                Console.WriteLine("Veículo não encontrado.");
-                return;
-            }
+            Console.Write("Quantidade de combustível (litros): ");
 
-            // Pede a quantidade de combustível.
-            Console.Write("Quantidade de combustível a adicionar (litros): ");
-
-            double litros;
-
-            // Valida a quantidade introduzida.
-            if (!double.TryParse(Console.ReadLine(), out litros))
+            if (!double.TryParse(Console.ReadLine(), out double litros))
             {
                 Console.WriteLine("Erro: Quantidade inválida.");
                 return;
             }
 
-            // Chama o método de abastecimento da classe Veiculo.
-            veiculo.Abastecer(litros);
+            v.Abastecer(litros);
         }
 
-        // Método para realizar uma viagem.
+        // Realiza uma viagem com um veículo.
         static void RealizarViagem()
         {
-            Console.WriteLine("=== REALIZAR VIAGEM ===");
+            Console.WriteLine("\n=== REALIZAR VIAGEM ===");
 
-            // Procura o veículo através da matrícula.
-            Veiculo veiculo = ProcurarVeiculo();
+            Veiculo v = ProcurarVeiculo();
+            if (v == null) return;
 
-            if (veiculo == null)
-            {
-                Console.WriteLine("Veículo não encontrado.");
-                return;
-            }
+            Console.Write("Distância da viagem (km): ");
 
-            // Pede a distância da viagem.
-            Console.Write("Introduza a distância da viagem (km): ");
-
-            int distancia;
-
-            // Valida a distância introduzida.
-            if (!int.TryParse(Console.ReadLine(), out distancia))
+            if (!int.TryParse(Console.ReadLine(), out int distancia))
             {
                 Console.WriteLine("Erro: Distância inválida.");
                 return;
             }
 
-            // Executa a viagem.
-            bool sucesso = veiculo.RealizarViagem(distancia);
+            if (!v.RealizarViagem(distancia))
+                Console.WriteLine("Não foi possível realizar a viagem.");
+        }
 
-            // Apresenta o resultado da operação.
-            if (sucesso)
+        // Consulta os dados de um veículo específico.
+        static void ConsultarDadosVeiculo()
+        {
+            Console.WriteLine("\n=== CONSULTAR DADOS ===");
+
+            Veiculo v = ProcurarVeiculo();
+            if (v == null) return;
+
+            double percentagem = (v.NivelCombustivel / v.CapacidadeDeposito) * 100;
+
+            Console.WriteLine("\nMatrícula: " + v.Matricula);
+            Console.WriteLine("Quilometragem: " + v.Quilometragem + " km");
+            Console.WriteLine("Combustível: " + v.NivelCombustivel.ToString("F2") + " litros");
+            Console.WriteLine("Capacidade: " + v.CapacidadeDeposito + " litros");
+            Console.WriteLine("Combustível disponível: " + percentagem.ToString("F2") + "%");
+
+            // Indica o estado do depósito.
+            Console.Write("Estado do depósito: ");
+
+            if (v.NivelCombustivel < v.CapacidadeDeposito * 0.10)
             {
-                Console.WriteLine("Viagem concluída!");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Reserva");
+            }
+            else if (v.NivelCombustivel >= v.CapacidadeDeposito)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Depósito cheio");
             }
             else
             {
-                Console.WriteLine("Não foi possível realizar a viagem.");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Combustível suficiente");
             }
+
+            Console.ResetColor();
         }
 
-        // Método para consultar os dados de um veículo específico.
-        static void ConsultarDadosVeiculo()
+        // Remove um veículo através da matrícula.
+        static void RemoverVeiculo()
         {
-            Console.WriteLine("=== CONSULTAR DADOS DO VEÍCULO ===");
+            Console.WriteLine("\n=== REMOVER VEÍCULO ===");
 
-            // Procura o veículo através da matrícula.
-            Veiculo veiculo = ProcurarVeiculo();
+            Veiculo v = ProcurarVeiculo();
+            if (v == null) return;
 
-            if (veiculo == null)
+            Console.Write("Tem a certeza de que pretende remover este veículo? (S/N): ");
+            string resposta = Console.ReadLine();
+
+            if (resposta.Equals("S", StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine("Veículo não encontrado.");
-                return;
+                frota.Remove(v);
+                Console.WriteLine("Veículo removido com sucesso!");
             }
-
-            // Apresenta todas as informações do veículo.
-            Console.WriteLine();
-            Console.WriteLine("Matrícula: " + veiculo.Matricula);
-            Console.WriteLine("Quilometragem: " + veiculo.Quilometragem + " km");
-            Console.WriteLine("Nível de combustível: " + veiculo.NivelCombustivel + " litros");
-            Console.WriteLine("Capacidade do depósito: " + veiculo.CapacidadeDeposito + " litros");
-
-            // Calcula a percentagem de combustível disponível.
-            double percentagem = (veiculo.NivelCombustivel / veiculo.CapacidadeDeposito) * 100;
-
-            Console.WriteLine("Combustível disponível: " + percentagem.ToString("F2") + "%");
+            else
+            {
+                Console.WriteLine("Operação cancelada.");
+            }
         }
 
-        // Método auxiliar para procurar um veículo pela matrícula.
+        // Procura um veículo através da matrícula.
         static Veiculo ProcurarVeiculo()
         {
-            Console.Write("Introduza a matrícula do veículo: ");
-
+            Console.Write("Introduza a matrícula: ");
             string matricula = Console.ReadLine();
 
-            // Percorre a lista à procura da matrícula.
-            foreach (Veiculo v in frota)
+            if (string.IsNullOrWhiteSpace(matricula))
             {
-                if (v.Matricula.Equals(matricula, StringComparison.OrdinalIgnoreCase))
-                {
-                    return v;
-                }
+                Console.WriteLine("Matrícula inválida.");
+                return null;
             }
 
-            // Devolve null se não encontrar o veículo.
+            foreach (Veiculo v in frota)
+            {
+                if (v.Matricula.Equals(matricula.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return v;
+            }
+
+            Console.WriteLine("Veículo não encontrado.");
             return null;
         }
 
-        // Método executado automaticamente quando a reserva é atingida.
+        // Apresenta o alerta quando o veículo entra na reserva.
         static void MostrarAlertaReserva(object sender, EventArgs e)
         {
-            // Converte o objeto que enviou o evento para Veiculo.
-            Veiculo veiculo = (Veiculo)sender;
-
-            // Guarda a cor atual da consola.
+            Veiculo v = (Veiculo)sender;
             ConsoleColor corAnterior = Console.ForegroundColor;
 
-            // Apresenta o alerta a vermelho.
             Console.ForegroundColor = ConsoleColor.Red;
-
-            Console.WriteLine();
-            Console.WriteLine("======================================");
+            Console.WriteLine("\n======================================");
             Console.WriteLine("          ALERTA DE RESERVA!");
             Console.WriteLine("======================================");
-            Console.WriteLine("ATENÇÃO: O veículo " + veiculo.Matricula + " está na reserva!");
-            Console.WriteLine("Nível de combustível: " + veiculo.NivelCombustivel + " litros");
-            Console.WriteLine("É necessário abastecer o veículo.");
+            Console.WriteLine("Veículo: " + v.Matricula);
+            Console.WriteLine("Combustível: " + v.NivelCombustivel.ToString("F2") + " litros");
+            Console.WriteLine("É necessário abastecer o veículo!");
             Console.WriteLine("======================================");
 
-            // Recupera a cor anterior da consola.
             Console.ForegroundColor = corAnterior;
         }
     }

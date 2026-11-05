@@ -8,154 +8,116 @@ namespace GestaoFrotaAutomovel
 {
     public class Veiculo
     {
-        // Campos privados: guardam os dados internos do veículo.
+        // Campos privados.
         private int _quilometragem;
         private double _nivelCombustivel;
 
-        // Propriedade automática para guardar a matrícula.
+        // Propriedades automáticas.
         public string Matricula { get; set; }
+        public int CapacidadeDeposito { get; private set; }
 
-        // Propriedade automática para guardar a capacidade do depósito.
-        public int CapacidadeDeposito { get; set; }
-
-        // Propriedade completa para controlar a quilometragem.
+        // Propriedade com validação da quilometragem.
         public int Quilometragem
         {
             get { return _quilometragem; }
-
             set
             {
-                // Impede valores negativos.
-                if (value < 0)
-                {
-                    Console.WriteLine("Erro: A quilometragem não pode ser negativa.");
-                }
-                // Impede que a quilometragem diminua.
-                else if (value < _quilometragem)
-                {
+                if (value < 0 || value < _quilometragem)
                     Console.WriteLine("Erro: A quilometragem não pode diminuir.");
-                }
                 else
-                {
                     _quilometragem = value;
-                }
             }
         }
 
-        // Propriedade completa para controlar o nível de combustível.
+        // Propriedade com validação do combustível.
         public double NivelCombustivel
         {
             get { return _nivelCombustivel; }
-
             set
             {
-                // Verifica se o combustível está dentro dos limites permitidos.
-                if (value < 0 || value > CapacidadeDeposito)
+                if (value < 0 || value > CapacidadeDeposito ||
+                    double.IsNaN(value) || double.IsInfinity(value))
                 {
                     Console.WriteLine("Erro: Nível de combustível inválido.");
                 }
                 else
                 {
+                    bool estavaEmReserva = _nivelCombustivel < CapacidadeDeposito * 0.10;
+
                     _nivelCombustivel = value;
 
-                    // Verifica se o combustível está abaixo de 10%.
-                    if (_nivelCombustivel < CapacidadeDeposito * 0.10)
-                    {
-                        // Dispara o evento de alerta de reserva.
+                    // Ativa o evento quando o combustível entra na reserva.
+                    if (!estavaEmReserva && value < CapacidadeDeposito * 0.10)
                         ReservaAtingida?.Invoke(this, EventArgs.Empty);
-                    }
                 }
             }
         }
 
-        // Declaração do evento de alerta de reserva.
+        // Evento de alerta de reserva.
         public event EventHandler ReservaAtingida;
 
-        // Construtor que obriga a indicar a matrícula e a capacidade do depósito.
+        // Construtor do veículo.
         public Veiculo(string matricula, int capacidadeDeposito)
         {
-            // Valida a matrícula.
             if (string.IsNullOrWhiteSpace(matricula))
-            {
-                throw new ArgumentException("A matrícula é obrigatória.");
-            }
+                throw new ArgumentException("A matrícula não pode estar vazia.");
 
-            // Valida a capacidade do depósito.
             if (capacidadeDeposito <= 0)
-            {
-                throw new ArgumentException("A capacidade do depósito deve ser superior a zero.");
-            }
+                throw new ArgumentException("A capacidade deve ser superior a zero.");
 
-            Matricula = matricula;
+            Matricula = matricula.Trim();
             CapacidadeDeposito = capacidadeDeposito;
-
-            // Inicializa a quilometragem a zero.
             _quilometragem = 0;
-
-            // Inicializa o depósito completamente cheio.
             _nivelCombustivel = capacidadeDeposito;
         }
 
-        // Método para adicionar combustível ao depósito.
+        // Método para abastecer o veículo.
         public void Abastecer(double litros)
         {
-            // Impede quantidades iguais ou inferiores a zero.
-            if (litros <= 0)
+            if (litros <= 0 || double.IsNaN(litros) || double.IsInfinity(litros))
             {
-                Console.WriteLine("Erro: A quantidade de combustível deve ser superior a zero.");
+                Console.WriteLine("Erro: Quantidade de combustível inválida.");
                 return;
             }
 
-            // Calcula o combustível que ficaria no depósito.
-            double novoNivel = NivelCombustivel + litros;
-
-            // Verifica se ultrapassa a capacidade máxima.
-            if (novoNivel > CapacidadeDeposito)
+            if (NivelCombustivel + litros > CapacidadeDeposito)
             {
-                Console.WriteLine("Aviso: A quantidade ultrapassa a capacidade do depósito.");
-
-                // Enche apenas até à capacidade máxima.
+                Console.WriteLine("Aviso: Capacidade máxima ultrapassada.");
                 NivelCombustivel = CapacidadeDeposito;
             }
             else
             {
-                // Atualiza o nível de combustível.
-                NivelCombustivel = novoNivel;
+                NivelCombustivel += litros;
             }
 
             Console.WriteLine("Abastecimento realizado com sucesso!");
-            Console.WriteLine("Combustível atual: " + NivelCombustivel + " litros.");
+            Console.WriteLine("Combustível atual: " + NivelCombustivel.ToString("F2") + " litros.");
         }
 
-        // Método para simular uma viagem.
+        // Método para realizar uma viagem.
         public bool RealizarViagem(int kmDistancia)
         {
-            // Verifica se a distância é válida.
             if (kmDistancia <= 0)
             {
-                Console.WriteLine("Erro: A distância deve ser superior a zero.");
+                Console.WriteLine("Erro: Distância inválida.");
                 return false;
             }
 
-            // Calcula o combustível necessário para a viagem.
-            double combustivelNecessario = kmDistancia * 0.07;
+            // Consumo de 0,07 litros por quilómetro.
+            double consumo = kmDistancia * 0.07;
 
-            // Verifica se existe combustível suficiente.
-            if (NivelCombustivel < combustivelNecessario)
+            if (NivelCombustivel < consumo)
             {
                 Console.WriteLine("Viagem recusada: Combustível insuficiente.");
                 return false;
             }
 
-            // Atualiza a quilometragem.
             Quilometragem += kmDistancia;
-
-            // Retira o combustível consumido.
-            NivelCombustivel -= combustivelNecessario;
+            NivelCombustivel -= consumo;
 
             Console.WriteLine("Viagem realizada com sucesso!");
-            Console.WriteLine("Distância percorrida: " + kmDistancia + " km.");
-            Console.WriteLine("Combustível consumido: " + combustivelNecessario + " litros.");
+            Console.WriteLine("Distância: " + kmDistancia + " km.");
+            Console.WriteLine("Combustível consumido: " + consumo.ToString("F2") + " litros.");
 
             return true;
         }
