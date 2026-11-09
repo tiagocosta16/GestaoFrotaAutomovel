@@ -22,7 +22,7 @@ namespace GestaoFrotaAutomovel
                 // Título do menu.
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("==============================================");
-                Console.WriteLine("    SISTEMA DE GESTÃO DE FROTA AUTOMÓVEL");
+                Console.WriteLine("    SISTEMA DE GESTÃO DE FROTA AUTOMÓVEL ");
                 Console.WriteLine("==============================================");
                 Console.ResetColor();
 
